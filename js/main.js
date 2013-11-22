@@ -12,16 +12,25 @@
         });
       } else {
         return classes.push({
-          packageName: key,
-          className: node.key,
           key: node.key,
           value: node.value,
           tuple: node.tuple
         });
       }
     };
-    recurse("root", root);
-    return classes;
+    recurse("", root);
+    return {
+      key: "",
+      children: classes
+    };
+  };
+
+  Array.prototype.make_key = function(hierarchy) {
+    return this.slice(0, hierarchy).join('/');
+  };
+
+  Array.prototype.tuple_str = function() {
+    return "[" + (this.join(", ")) + "]";
   };
 
   $(function() {
@@ -43,7 +52,7 @@
         children: []
       };
       return delta.watch([], function(tuple) {
-        var appended, circle, elems, flattened, h, i, nodes, root, text_attr, text_style;
+        var appended, circle, elems, flattened, h, i, nodes, root, text_attr, text_style, updated_key;
         $("#list").prepend($("<p>").text("[" + (tuple.join(", ")) + "]"));
         root = data;
         i = 0;
@@ -61,16 +70,17 @@
           root.children.push(h);
         }
         root = root.children[i];
+        updated_key = tuple.make_key(2);
         i = 0;
         while (i < root.children.length) {
-          if (root.children[i].key === tuple[1]) {
+          if (root.children[i].key === updated_key) {
             break;
           }
           i += 1;
         }
         if (i === root.children.length) {
           h = {
-            key: tuple[1],
+            key: updated_key,
             value: 1,
             tuple: tuple
           };
@@ -117,22 +127,32 @@
           return "[" + (d.tuple.join(", ")) + "]";
         }).attr(text_attr).style(text_style);
         appended.append("text").attr("class", "value").text(function(d) {
-          if (!d.value) {
-            return "";
-          }
-          return "count: " + d.value;
+          return "";
         }).attr("dy", "2em").attr(text_attr).style(text_style);
         elems.transition().duration(700).attr("transform", function(d) {
           return "translate(" + d.x + ", " + d.y + ")";
         });
-        elems.select("circle").transition().duration(700).attr("r", function(d) {
+        elems.select("circle").attr("fill", function(d, i) {
+          console.log(d);
+          if (d.tuple && d.tuple.make_key(2) === updated_key) {
+            return "white";
+          } else {
+            return color(i);
+          }
+        }).transition().duration(300).attr("fill", function(d, i) {
+          return color(i);
+        }).attr("r", function(d) {
           return d.r;
         });
         elems.select(".tuple").each(function(d) {
-          return this.textContent = d.tuple;
+          if (d.tuple) {
+            return this.textContent = "[" + (d.tuple.slice(0, 2).join(', ')) + "]";
+          }
         });
         return elems.select(".value").each(function(d) {
-          return this.textContent = d.value;
+          if (d.tuple) {
+            return this.textContent = d.value;
+          }
         });
       });
     });

@@ -8,14 +8,21 @@ flatten = (root) ->
         recurse(node.key, child)
     else
       classes.push
-        packageName: key
-        className: node.key
         key: node.key
         value: node.value
         tuple: node.tuple
 
-  recurse("root", root)
-  return classes
+  recurse("", root)
+  return {
+    key: ""
+    children: classes
+  }
+
+Array::make_key = (hierarchy) ->
+  this.slice(0, hierarchy).join('/')
+
+Array::tuple_str = ->
+  "[#{this.join(", ")}]"
 
 $ ->
   io = new RocketIO().connect("http://linda.masuilab.org")
@@ -47,26 +54,6 @@ $ ->
     delta.watch [], (tuple) =>
       $("#list").prepend $("<p>").text("[#{tuple.join(", ")}]")
 
-      #data = {
-      #  key: "delta",
-      #  children: [{
-      #    key: "sensor",
-      #    children: [{
-      #      key: "light",
-      #      value: 25,
-      #      tuple: '["sensor", "light", 25]'
-      #    }, {
-      #      key: "temperture",
-      #      value: 40,
-      #      tuple: '["sensor", "temperture", 40]'
-      #    }]
-      #  }, {
-      #    key: "hue",
-      #    value: 70,
-      #    tuple: '["hue", "on"]'
-      #  }]
-      #}
-
       # update data
       # 第一階層 sensor
       # [sensor, light, 3]
@@ -87,14 +74,15 @@ $ ->
 
       root = root.children[i]
 
+      updated_key = tuple.make_key(2)
       i = 0; while i < root.children.length
-        if root.children[i].key == tuple[1]
+        if root.children[i].key == updated_key
           break
         i += 1
 
       if i == root.children.length
         h = {
-            key: tuple[1]
+            key: updated_key
             value: 1
             tuple: tuple
         }
@@ -149,7 +137,7 @@ $ ->
 
       appended.append("text")
         .attr("class", "tuple")
-        .text (d) ->
+        .text (d) -> #[TODO] work?
           return "" unless d.tuple
           "[#{d.tuple.join(", ")}]"
         .attr(text_attr)
@@ -158,8 +146,7 @@ $ ->
       appended.append("text")
         .attr("class", "value")
         .text (d) ->
-          return "" unless d.value
-          "count: #{d.value}"
+          ""
         .attr("dy", "2em")
         .attr(text_attr)
         .style(text_style)
@@ -172,13 +159,21 @@ $ ->
           "translate(#{d.x}, #{d.y})"
 
       elems.select("circle")
+        .attr "fill", (d, i) ->
+          console.log d
+          if d.tuple && d.tuple.make_key(2) == updated_key
+            "white"
+          else
+            color(i)
         .transition()
-        .duration(700)
+        .duration(300)
+        .attr "fill", (d, i) =>
+          color(i)
         .attr "r", (d) ->
           d.r
 
       elems.select(".tuple").each (d) ->
-        this.textContent = d.tuple
+        this.textContent = "[#{d.tuple.slice(0, 2).join(', ')}]" if d.tuple
 
       elems.select(".value").each (d) ->
-        this.textContent = d.value
+        this.textContent = d.value if d.tuple
