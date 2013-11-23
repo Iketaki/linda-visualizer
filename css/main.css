@@ -29,7 +29,6 @@ header {
     height: 100%;
     float: right;
     width: 25%;
-    font-size: 80%;
     overflow: scroll; }
     #main #list p {
       padding: 0; }

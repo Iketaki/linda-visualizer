@@ -14,7 +14,8 @@
         return classes.push({
           key: node.key,
           value: node.value,
-          tuple: node.tuple
+          tuple: node.tuple,
+          ts: node.ts
         });
       }
     };
@@ -62,7 +63,7 @@
         child_index = data.children.length - 1;
         return ts.watch([], function(tuple) {
           var appended, circle, elems, flattened, h, i, nodes, root, text_attr, text_style, updated_key;
-          $("#list").prepend($("<p>").text("[" + (tuple.join(", ")) + "]"));
+          $("#list").prepend($("<p>").text("" + ts.name + ": [" + (tuple.join(", ")) + "]"));
           root = data.children[child_index];
           i = 0;
           while (i < root.children.length) {
@@ -91,7 +92,8 @@
             h = {
               key: updated_key,
               value: 1,
-              tuple: tuple
+              tuple: tuple,
+              ts: ts.name
             };
             root.children.push(h);
           } else {
@@ -138,6 +140,9 @@
           appended.append("text").attr("class", "value").text(function(d) {
             return "";
           }).attr("dy", "2em").attr(text_attr).style(text_style);
+          appended.append("text").attr("class", "ts").text(function(d) {
+            return "";
+          }).attr("dy", "-2em").attr(text_attr).style(text_style);
           elems.transition().duration(700).attr("transform", function(d) {
             return "translate(" + d.x + ", " + d.y + ")";
           });
@@ -163,9 +168,14 @@
               return this.textContent = "[" + (d.tuple.slice(0, 2).join(', ')) + "]";
             }
           });
-          return elems.select(".value").each(function(d) {
+          elems.select(".value").each(function(d) {
             if (d.tuple) {
               return this.textContent = d.value;
+            }
+          });
+          return elems.select(".ts").each(function(d) {
+            if (d.ts) {
+              return this.textContent = d.ts;
             }
           });
         });

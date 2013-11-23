@@ -11,6 +11,7 @@ flatten = (root) ->
         key: node.key
         value: node.value
         tuple: node.tuple
+        ts: node.ts
 
   recurse("", root)
   return {
@@ -59,7 +60,7 @@ $ ->
       child_index = data.children.length - 1
 
       ts.watch [], (tuple) =>
-        $("#list").prepend $("<p>").text("[#{tuple.join(", ")}]")
+        $("#list").prepend $("<p>").text("#{ts.name}: [#{tuple.join(", ")}]")
 
         # update data
         # 第一階層 sensor
@@ -92,6 +93,7 @@ $ ->
               key: updated_key
               value: 1
               tuple: tuple
+              ts: ts.name
           }
           root.children.push h
         else
@@ -158,6 +160,14 @@ $ ->
           .attr(text_attr)
           .style(text_style)
 
+        appended.append("text")
+          .attr("class", "ts")
+          .text (d) ->
+            ""
+          .attr("dy", "-2em")
+          .attr(text_attr)
+          .style(text_style)
+
         # Update
         elems
           .transition()
@@ -183,6 +193,9 @@ $ ->
 
         elems.select(".value").each (d) ->
           this.textContent = d.value if d.tuple
+
+        elems.select(".ts").each (d) ->
+          this.textContent = d.ts if d.ts
 
     # tuple
     for ts in tuple_spaces
