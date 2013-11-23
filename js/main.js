@@ -133,15 +133,20 @@
           return "translate(" + d.x + ", " + d.y + ")";
         });
         elems.select("circle").attr("fill", function(d, i) {
-          console.log(d);
           if (d.tuple && d.tuple.make_key(2) === updated_key) {
             return "white";
           } else {
             return color(i);
           }
+        }).attr("fill-opacity", function(d, i) {
+          if (d.tuple && d.tuple.make_key(2) === updated_key) {
+            return 0.8;
+          } else {
+            return 0.3;
+          }
         }).transition().duration(300).attr("fill", function(d, i) {
           return color(i);
-        }).attr("r", function(d) {
+        }).attr("fill-opacity", 0.3).attr("r", function(d) {
           return d.r;
         });
         elems.select(".tuple").each(function(d) {

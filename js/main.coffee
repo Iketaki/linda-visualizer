@@ -160,15 +160,14 @@ $ ->
 
       elems.select("circle")
         .attr "fill", (d, i) ->
-          console.log d
-          if d.tuple && d.tuple.make_key(2) == updated_key
-            "white"
-          else
-            color(i)
+          if d.tuple && d.tuple.make_key(2) == updated_key then "white" else color(i)
+        .attr "fill-opacity", (d, i) ->
+          if d.tuple && d.tuple.make_key(2) == updated_key then 0.8 else 0.3
         .transition()
         .duration(300)
         .attr "fill", (d, i) =>
           color(i)
+        .attr("fill-opacity", 0.3)
         .attr "r", (d) ->
           d.r
 
