@@ -40,7 +40,7 @@
     io = new RocketIO().connect("http://linda.masuilab.org");
     linda = new Linda(io);
     tuple_spaces = ["delta", "iota", "enoshima", "orf"];
-    width = $("#visual").height();
+    width = $("#visual").width();
     height = $("#visual").height();
     svg = d3.select("#visual").append("svg").attr("width", width).attr("height", height);
     pack = d3.layout.pack().size([width, height]).padding(10);
@@ -139,10 +139,10 @@
           }).attr(text_attr).style(text_style);
           appended.append("text").attr("class", "value").text(function(d) {
             return "";
-          }).attr("dy", "2em").attr(text_attr).style(text_style);
+          }).attr("dy", "1.2em").attr(text_attr).style(text_style).attr("fill", "gray");
           appended.append("text").attr("class", "ts").text(function(d) {
             return "";
-          }).attr("dy", "-2em").attr(text_attr).style(text_style);
+          }).attr("dy", "-1.2em").attr(text_attr).style(text_style).attr("fill", "gray");
           elems.transition().duration(700).attr("transform", function(d) {
             return "translate(" + d.x + ", " + d.y + ")";
           });

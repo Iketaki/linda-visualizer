@@ -32,7 +32,7 @@ $ ->
   #delta = new linda.TupleSpace("delta")
 
   # init
-  width = $("#visual").height()
+  width = $("#visual").width()
   height = $("#visual").height()
 
   svg = d3.select("#visual").append("svg").attr("width", width).attr("height", height)
@@ -156,17 +156,19 @@ $ ->
           .attr("class", "value")
           .text (d) ->
             ""
-          .attr("dy", "2em")
+          .attr("dy", "1.2em")
           .attr(text_attr)
           .style(text_style)
+          .attr("fill", "gray")
 
         appended.append("text")
           .attr("class", "ts")
           .text (d) ->
             ""
-          .attr("dy", "-2em")
+          .attr("dy", "-1.2em")
           .attr(text_attr)
           .style(text_style)
+          .attr("fill", "gray")
 
         # Update
         elems
