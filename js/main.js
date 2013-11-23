@@ -11,12 +11,7 @@
           return recurse(node.key, child);
         });
       } else {
-        return classes.push({
-          key: node.key,
-          value: node.value,
-          tuple: node.tuple,
-          ts: node.ts
-        });
+        return classes.push(node);
       }
     };
     recurse("", root);
@@ -91,22 +86,20 @@
           if (i === root.children.length) {
             h = {
               key: updated_key,
-              value: 1,
               tuple: tuple,
-              ts: ts.name
+              ts: ts.name,
+              count: 1,
+              value: 1
             };
             root.children.push(h);
           } else {
-            root.children[i].value += 1;
+            root.children[i].count += 1;
+            root.children[i].value = Math.sqrt(root.children[i].count);
             root.children[i].tuple = tuple;
           }
           flattened = flatten(data);
           nodes = pack.nodes(flattened);
-          window.data = data;
-          window.flattened = flattened;
-          window.nodes = nodes;
           elems = svg.selectAll(".node").data(nodes);
-          window.elems = elems;
           appended = elems.enter().append("g").attr("class", "node").attr("transform", function(d) {
             return "translate(" + d.x + ", " + d.y + ")";
           });
@@ -137,7 +130,7 @@
             }
             return "[" + (d.tuple.join(", ")) + "]";
           }).attr(text_attr).style(text_style);
-          appended.append("text").attr("class", "value").text(function(d) {
+          appended.append("text").attr("class", "count").text(function(d) {
             return "";
           }).attr("dy", "1.2em").attr(text_attr).style(text_style).attr("fill", "gray");
           appended.append("text").attr("class", "ts").text(function(d) {
@@ -168,9 +161,9 @@
               return this.textContent = "[" + (d.tuple.slice(0, 2).join(', ')) + "]";
             }
           });
-          elems.select(".value").each(function(d) {
+          elems.select(".count").each(function(d) {
             if (d.tuple) {
-              return this.textContent = d.value;
+              return this.textContent = d.count;
             }
           });
           return elems.select(".ts").each(function(d) {

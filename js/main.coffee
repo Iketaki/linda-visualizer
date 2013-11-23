@@ -7,11 +7,7 @@ flatten = (root) ->
       node.children.forEach (child)->
         recurse(node.key, child)
     else
-      classes.push
-        key: node.key
-        value: node.value
-        tuple: node.tuple
-        ts: node.ts
+      classes.push node
 
   recurse("", root)
   return {
@@ -91,29 +87,24 @@ $ ->
         if i == root.children.length
           h = {
               key: updated_key
-              value: 1
               tuple: tuple
               ts: ts.name
+              count: 1
+              value: 1
           }
           root.children.push h
         else
-          root.children[i].value += 1
+          root.children[i].count += 1
+          root.children[i].value = Math.sqrt root.children[i].count
           root.children[i].tuple = tuple
 
         # packing algorithhm
         flattened = flatten(data)
         nodes = pack.nodes(flattened)
 
-        # for debug
-        window.data = data
-        window.flattened = flattened
-        window.nodes = nodes
-
         # draws
         elems = svg.selectAll(".node")
           .data(nodes)
-
-        window.elems = elems
 
         # Append
         appended = elems.enter().append("g")
@@ -153,7 +144,7 @@ $ ->
           .style(text_style)
 
         appended.append("text")
-          .attr("class", "value")
+          .attr("class", "count")
           .text (d) ->
             ""
           .attr("dy", "1.2em")
@@ -193,8 +184,8 @@ $ ->
         elems.select(".tuple").each (d) ->
           this.textContent = "[#{d.tuple.slice(0, 2).join(', ')}]" if d.tuple
 
-        elems.select(".value").each (d) ->
-          this.textContent = d.value if d.tuple
+        elems.select(".count").each (d) ->
+          this.textContent = d.count if d.tuple
 
         elems.select(".ts").each (d) ->
           this.textContent = d.ts if d.ts
