@@ -3,8 +3,8 @@ flatten = (root) ->
   classes = []
 
   recurse = (key, node) ->
-    if (node.children && node.children.length > 0)
-      node.children.forEach (child)->
+    if (node.children)
+      for child in node.children
         recurse(node.key, child)
     else
       classes.push node
@@ -15,11 +15,11 @@ flatten = (root) ->
     children: classes
   }
 
-Array::make_key = (hierarchy) ->
-  this.slice(0, hierarchy).join('/')
+make_key = (tuple, hierarchy) ->
+  tuple.slice(0, hierarchy).join('/')
 
-Array::tuple_str = ->
-  "[#{this.join(", ")}]"
+tuple_str = (tuple) ->
+  "[#{tuple.join(", ")}]"
 
 $ ->
   io = new RocketIO().connect("http://linda.masuilab.org")
@@ -36,32 +36,30 @@ $ ->
     .size([width, height])
     .padding(10)
 
-  data = []
+  data = {}
   color = d3.scale.category20()
 
   # rocketio
   io.on "connect", =>
     $("#status").text "#{io.type} connect"
 
-    data = {
-      key: "linda.masuilab.org",
-      children: []
-    }
-
-    watch_ts = (ts) ->
-      data.children.push
-        key: ts.name
-        children: []
-
-      child_index = data.children.length - 1
-
+    watch_ts = (ts) =>
       ts.watch [], (tuple) =>
         $("#list").prepend $("<p>").text("#{ts.name}: [#{tuple.join(", ")}]")
 
         # update data
         # 第一階層 sensor
         # [sensor, light, 3]
-        root = data.children[child_index]
+
+        flag_enoshima = false
+        # もし江ノ島の風だったら
+        if tuple[0] == "wind" || tuple[0] == "saykana"
+          flag_enoshima = true
+
+        for child in data.children
+          if child.key == ts.name
+            root = child
+            break
 
         i = 0; while i < root.children.length
           if root.children[i].key == tuple[0]
@@ -70,33 +68,43 @@ $ ->
 
         # なかったら
         if i == root.children.length
-          h = {
+          if flag_enoshima
+            root.children.push
+              key: tuple[0]
+              tuple: tuple
+              ts: ts.name
+              count: 1
+              value: 1
+          else
+            root.children.push
               key: tuple[0]
               children: []
-          }
-          root.children.push h
+        else if flag_enoshima
+          root.children[i].count += 1
+          root.children[i].value = Math.log(root.children[i].count)
+          root.children[i].tuple = tuple
 
-        root = root.children[i]
+        # 第二階層 light
+        unless flag_enoshima
+          root = root.children[i]
+          updated_key = make_key(tuple, 2)
 
-        updated_key = tuple.make_key(2)
-        i = 0; while i < root.children.length
-          if root.children[i].key == updated_key
-            break
-          i += 1
+          i = 0; while i < root.children.length
+            if root.children[i].key == updated_key
+              break
+            i += 1
 
-        if i == root.children.length
-          h = {
+          if i == root.children.length
+            root.children.push
               key: updated_key
               tuple: tuple
               ts: ts.name
               count: 1
               value: 1
-          }
-          root.children.push h
-        else
-          root.children[i].count += 1
-          root.children[i].value = Math.sqrt root.children[i].count
-          root.children[i].tuple = tuple
+          else
+            root.children[i].count += 1
+            root.children[i].value = Math.sqrt root.children[i].count
+            root.children[i].tuple = tuple
 
         # packing algorithhm
         flattened = flatten(data)
@@ -136,10 +144,18 @@ $ ->
           "text-shadow": "#000000 0 -2px 0"
 
         appended.append("text")
-          .attr("class", "tuple")
+          .attr("class", "now")
           .text (d) -> #[TODO] work?
-            return "" unless d.tuple
-            "[#{d.tuple.join(", ")}]"
+            ""
+          .attr(text_attr)
+          .style(text_style)
+          .attr("fill", "yellow")
+
+        appended.append("text")
+          .attr("class", "ts")
+          .attr("dy", "-1.5em")
+          .text (d) ->
+            ""
           .attr(text_attr)
           .style(text_style)
 
@@ -147,19 +163,17 @@ $ ->
           .attr("class", "count")
           .text (d) ->
             ""
-          .attr("dy", "1.2em")
           .attr(text_attr)
           .style(text_style)
           .attr("fill", "gray")
 
         appended.append("text")
-          .attr("class", "ts")
-          .text (d) ->
+          .attr("class", "tuple")
+          .text (d) -> #[TODO] work?
             ""
-          .attr("dy", "-1.2em")
+          .attr("font-size", "24")
           .attr(text_attr)
           .style(text_style)
-          .attr("fill", "gray")
 
         # Update
         elems
@@ -170,9 +184,9 @@ $ ->
 
         elems.select("circle")
           .attr "fill", (d, i) ->
-            if d.tuple && d.tuple.make_key(2) == updated_key then "white" else color(i)
+            if d.tuple && make_key(d.tuple, 2) == updated_key then "white" else color(i)
           .attr "fill-opacity", (d, i) ->
-            if d.tuple && d.tuple.make_key(2) == updated_key then 0.8 else 0.3
+            if d.tuple && make_key(d.tuple, 2) == updated_key then 0.8 else 0.3
           .transition()
           .duration(300)
           .attr "fill", (d, i) =>
@@ -182,14 +196,29 @@ $ ->
             d.r
 
         elems.select(".tuple").each (d) ->
-          this.textContent = "[#{d.tuple.slice(0, 2).join(', ')}]" if d.tuple
+          this.textContent = "[#{d.tuple.slice(0, if d.tuple[0] == "wind" || d.tuple[0] == "saykana" then 1 else 2).join(', ')}]" if d.tuple
+
+        elems.select(".now").each (d) ->
+          $(this).attr("dy", "#{d.r-30}px")
+          #this.textContent = "[#{d.tuple.join(', ')}]" if d.tuple
 
         elems.select(".count").each (d) ->
-          this.textContent = d.count if d.tuple
+          this.textContent = "count: #{d.count}" if d.tuple
+          $(this).attr("dy", "#{d.r-30}px")
 
         elems.select(".ts").each (d) ->
           this.textContent = d.ts if d.ts
 
+    data = {
+      key: "linda.masuilab.org"
+      children: []
+    }
+
     # tuple
+    for ts in tuple_spaces
+      data.children.push
+        key: ts
+        children: []
+
     for ts in tuple_spaces
       watch_ts(new linda.TupleSpace(ts))
