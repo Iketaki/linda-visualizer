@@ -43,7 +43,7 @@
     width = $("#visual").width();
     height = $("#visual").height();
     svg = d3.select("#visual").append("svg").attr("width", width).attr("height", height);
-    pack = d3.layout.pack().size([width, height]).padding(10);
+    pack = d3.layout.pack().size([width, height]).padding(2);
     data = {};
     color = d3.scale.category20();
     return io.on("connect", function() {
@@ -89,7 +89,7 @@
             }
           } else if (flag_enoshima) {
             root.children[i].count += 1;
-            root.children[i].value = Math.log(root.children[i].count);
+            root.children[i].value = Math.sqrt(Math.sqrt(root.children[i].count));
             root.children[i].tuple = tuple;
           }
           if (!flag_enoshima) {
@@ -112,7 +112,7 @@
               });
             } else {
               root.children[i].count += 1;
-              root.children[i].value = Math.sqrt(root.children[i].count);
+              root.children[i].value = Math.sqrt(Math.sqrt(root.children[i].count));
               root.children[i].tuple = tuple;
             }
           }

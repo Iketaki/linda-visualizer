@@ -34,7 +34,7 @@ $ ->
   svg = d3.select("#visual").append("svg").attr("width", width).attr("height", height)
   pack = d3.layout.pack()
     .size([width, height])
-    .padding(10)
+    .padding(2)
 
   data = {}
   color = d3.scale.category20()
@@ -81,7 +81,7 @@ $ ->
               children: []
         else if flag_enoshima
           root.children[i].count += 1
-          root.children[i].value = Math.log(root.children[i].count)
+          root.children[i].value = Math.sqrt(Math.sqrt(root.children[i].count))
           root.children[i].tuple = tuple
 
         # 第二階層 light
@@ -103,7 +103,7 @@ $ ->
               value: 1
           else
             root.children[i].count += 1
-            root.children[i].value = Math.sqrt root.children[i].count
+            root.children[i].value = Math.sqrt(Math.sqrt(root.children[i].count))
             root.children[i].tuple = tuple
 
         # packing algorithhm
